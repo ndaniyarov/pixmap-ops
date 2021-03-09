@@ -34,8 +34,6 @@ ppm_image::ppm_image(const ppm_image& orig)
       pixel[i].b = (int)orig.pixel[i].b; 
       
   }
-  for (int i = 0; i < size; i++)
-  cout << (int)orig.pixel[i].r << (int)orig.pixel[i].g << (int)orig.pixel[i].b << " " <<i << endl;
 }
 
 ppm_image& ppm_image::operator=(const ppm_image& orig)
@@ -74,8 +72,9 @@ bool ppm_image::load(const std::string& filename)
    string line;
    string p3;
    int max;
-   pixel = new ppm_pixel[widthVar*heightVar];
    file >> p3 >> widthVar >> heightVar >> max;
+   pixel = new ppm_pixel[widthVar*heightVar];
+   
    if (!file){
       return false;
    }
@@ -85,7 +84,6 @@ bool ppm_image::load(const std::string& filename)
          pixel[i].r = red;
          pixel[i].g = green;
          pixel[i].b = blue; 
-         //cout << (int)pixel[i].r << (int)pixel[i].g << (int)pixel[i].b << " ";
       }
    file.close();
    return true;
@@ -94,7 +92,6 @@ bool ppm_image::load(const std::string& filename)
    
 bool ppm_image::save(const std::string& filename) const
 {
-   //cout << (int)pixel[i].r << " " << (int)pixel[i].g << " " << (int)pixel[i].b << " ";
    ofstream out;
    out.open(filename.c_str());
    if (!out){
@@ -108,7 +105,6 @@ bool ppm_image::save(const std::string& filename) const
       green = pixel[i].g;
       blue = pixel[i].b;
       out << (int)red << " "<< (int)green<< " " << (int)blue << " ";
-      //cout << (int)red << " "<< (int)green<< " " << (int)blue << " ";
    }
    if (out.fail()){
       return false;
@@ -120,84 +116,60 @@ bool ppm_image::save(const std::string& filename) const
  ppm_image ppm_image::resize(int w, int h) const
 {
    ppm_image result(w,h);
-   ppm_pixel* newPixel = new ppm_pixel[w*h];
-   double wScale =  (double)w / (double)widthVar;
-   double hScale = (double)h / (double)heightVar;
-      for(int i = 0; i < h; i++){
-         for(int j = 0; j < w; j++){
-            int newLoc = i*wScale;
-            int oldLoc = (int)(i/hScale)*widthVar + (int)(j/wScale);
+      for(int i = 0; i < heightVar; i++){
+         for(int j = 0; j < widthVar; j++){
+            int newy = floor((float)i * (w-1)/(float)(widthVar-1));
+            int newx = floor((float)j * (h-1)/(float)(heightVar-1));
+            int newLoc = newx * w + newy;
                 
-            newPixel[newLoc].r =  pixel[oldLoc].r;
-            newPixel[newLoc].g =  pixel[oldLoc].g;
-            newPixel[newLoc].b =  pixel[oldLoc].b;
+            result.pixel[newLoc].r =  pixel[i * widthVar + j].r;
+            result.pixel[newLoc].g =  pixel[i * widthVar + j].g;
+            result.pixel[newLoc].b =  pixel[i * widthVar + j].b;
          }
       }
-
     return result;
 }
 
 ppm_image ppm_image::flip_horizontal() const
 {
    ppm_image image(widthVar, heightVar);
-   ppm_pixel pix1;
-   ppm_pixel pix2;
-   int numRows = widthVar-1;
-   int numCols = heightVar-1;
-   ppm_pixel* pixels= new ppm_pixel[widthVar*heightVar];
-   for (int r = 0; r < heightVar; r++){
-      for (int c = 0; c < widthVar/2; c++){
-         pix1 = get(numRows,numCols);
-         pix2 = get(r,c);
-         //cout << "hellpppp";
-         //cout << (int)pix1.r << (int)pix1.g << (int)pix1.b << " ";
-         pixels[r * widthVar + c] = pix1;
-         pixels[numRows * widthVar + numCols] = pix2;
-         numRows--;
-         numCols--;
-         
+   int red, green, blue = 0;
+
+   for (int r = 0; r <= heightVar/2; r++){
+      for (int c = 0; c < widthVar; c++){
+         red = pixel[r * widthVar + c].r;
+         green = pixel[r * widthVar + c].g;
+         blue = pixel[r * widthVar + c].b;
+
+         image.pixel[r * widthVar + c].r = pixel[((heightVar - r) * widthVar) + c].r;
+         image.pixel[r * widthVar + c].g = pixel[((heightVar - r) * widthVar) + c].g;
+         image.pixel[r * widthVar + c].b = pixel[((heightVar - r) * widthVar) + c].b;
+
+         image.pixel[((heightVar - r) * widthVar) + c].r = red;
+         image.pixel[((heightVar - r) * widthVar) + c].g = green;
+         image.pixel[((heightVar - r) * widthVar) + c].b = blue;
       }
    }
-   for (int i = 0; i < widthVar*heightVar; i++){
-      /*
-         pixel[i].r = (int)pixels[i].r;
-         pixel[i].g = (int)pixels[i].g;
-         pixel[i].b = (int)pixels[i].b;
-      */
-         image.pixel[i].r = (int)pixels[i].r;
-         image.pixel[i].g = (int)pixels[i].g;
-         image.pixel[i].b = (int)pixels[i].b;
-         
-         //cout << (int)pixel[i].r << (int)pixel[i].g << (int)pixel[i].b << " ";
-      }
     return image;
-    delete[] pixels;
 }
 
 ppm_image ppm_image::subimage(int startx, int starty, int w, int h) const
 {
+   if (widthVar < w+startx)
+      w = widthVar;
+   if (heightVar < h+starty)
+      h = heightVar;
    ppm_image result(w,h);
-   ppm_pixel* newPixel = new ppm_pixel[w*h];
    int p = 0;
-   int x = startx;
-   int y = starty;
-   for (int i = startx; i < x + w; i++){
-      for (int j = starty; j < y + h; j++){
-      int location = i * widthVar + j;
-      newPixel[p].r = (int)pixel[location].r;
-      newPixel[p].g = (int)pixel[location].g;
-      newPixel[p].b = (int)pixel[location].b; 
+   for (int i = startx; i < startx + w; i++){
+      for (int j = starty; j < starty + h; j++){
+      int location = (j * widthVar) + i;
+      result.pixel[p].r = (int)pixel[location].r;
+      result.pixel[p].g = (int)pixel[location].g;
+      result.pixel[p].b = (int)pixel[location].b; 
       p++;
       }
    }
-   for (int i = 0; i < w*h; i++){ 
-      result.pixel[i].r = (int)newPixel[i].r;
-      result.pixel[i].g = (int)newPixel[i].g;
-      result.pixel[i].b = (int)newPixel[i].b; 
-   }
-   //result.widthVar = w;
-   //result.heightVar = h;
-   delete[] newPixel;
     return result;
 }
 
@@ -217,14 +189,10 @@ void ppm_image::replace(const ppm_image& image, int startx, int starty)
 ppm_image ppm_image::alpha_blend(const ppm_image& other, float alpha) const
 {
    ppm_image result(widthVar, heightVar);
-   for (int i = 0; i < widthVar*heightVar; ++i){ 
-      result.pixel[i].r = (float)pixel[i].r * (1-alpha) + (float)other.pixel[i].r*alpha;
-      result.pixel[i].g = (float)pixel[i].g * (1-alpha) + (float)other.pixel[i].g*alpha;
-      result.pixel[i].b = (float)pixel[i].b * (1-alpha) + (float)other.pixel[i].b*alpha; 
-
-      //pixel[i].r = (int)result.pixel[i].r;
-      //pixel[i].g = (int)result.pixel[i].g;
-      //pixel[i].b = (int)result.pixel[i].b;
+   for (int i = 0; i < widthVar*heightVar; i++){ 
+      result.pixel[i].r = (float)((pixel[i].r*(1-alpha)) + (float)(other.pixel[i].r*alpha));
+      result.pixel[i].g = (float)((pixel[i].g*(1-alpha)) + (float)(other.pixel[i].g*alpha));
+      result.pixel[i].b = (float)((pixel[i].b*(1-alpha)) + (float)(other.pixel[i].b*alpha));
    }
    
    return result;
@@ -232,35 +200,24 @@ ppm_image ppm_image::alpha_blend(const ppm_image& other, float alpha) const
 
 ppm_image ppm_image::gammaCorrect(float gamma) const
 {
-   //I = pow(I, 1/gamma)
-   ppm_image result;
-   ppm_pixel* newPixel = new ppm_pixel[heightVar*widthVar];
+   ppm_image result(widthVar,heightVar);
    for (int i = 0; i < heightVar*widthVar; i++){ 
-      newPixel[i].r = pow((int)pixel[i].r, 1/gamma);
-      newPixel[i].g = pow((int)pixel[i].g, 1/gamma);
-      newPixel[i].b = pow((int)pixel[i].b, 1/gamma);
-
-      result.pixel[i].r = (int)newPixel[i].r;
-      result.pixel[i].g = (int)newPixel[i].g;
-      result.pixel[i].b = (int)newPixel[i].b;
+      result.pixel[i].r  = 255 * pow((float)pixel[i].r/255, (1/gamma));
+      result.pixel[i].g  = 255 * pow((float)pixel[i].g/255, (1/gamma));
+      result.pixel[i].b  = 255 * pow((float)pixel[i].b/255, (1/gamma));
    }
    return result;
 }
 
 ppm_image ppm_image::grayscale() const
 {
-   ppm_image result;
-   ppm_pixel* newPixel = new ppm_pixel[heightVar*widthVar];
+   ppm_image result(widthVar, heightVar);
    for (int i = 0; i < heightVar*widthVar; i++){ 
-      newPixel[i].r = (int)pixel[i].r;
-      newPixel[i].g = (int)pixel[i].g;
-      newPixel[i].b = (int)pixel[i].b;
-
-      result.pixel[i].r = (int)newPixel[i].r*0.3;
-      result.pixel[i].g = (int)newPixel[i].g*0.59;
-      result.pixel[i].b = (int)newPixel[i].b*0.11;
+      int average = floor((float)pixel[i].r*0.3 + (float)pixel[i].g*0.5 + pixel[i].b*0.11);
+      result.pixel[i].r = average;
+      result.pixel[i].g = average;
+      result.pixel[i].b = average;
    }
-   delete[] newPixel;
    return result;
 }
 
@@ -286,33 +243,25 @@ int ppm_image::width() const
 }
 
 //Invert colors: subtract each color channel from the max value, 255.
-void ppm_image::invert(){
-   ppm_pixel* newPixel = new ppm_pixel[heightVar*widthVar];
+ppm_image ppm_image::invert(){
+   ppm_image img(widthVar, heightVar);
    for (int i = 0; i < heightVar*widthVar; i++){ 
-      newPixel[i].r = (int)pixel[i].r;
-      newPixel[i].g = (int)pixel[i].g;
-      newPixel[i].b = (int)pixel[i].b;
-
-      pixel[i].r = 255-newPixel[i].r;
-      pixel[i].g = 255-newPixel[i].g;
-      pixel[i].b = 255-newPixel[i].b;
+      img.pixel[i].r = 255 - (int)pixel[i].r;
+      img.pixel[i].g = 255 - (int)pixel[i].g;
+      img.pixel[i].b = 255 - (int)pixel[i].b;
    }
-   delete[] newPixel;
+   return img;
 }
 
 //Swirl colors: rotate the colors of your image such that the red channel becomes the green channel, the green becomes blue, and the blue becomes red.
-void ppm_image::swirl(){
-   ppm_pixel* newPixel = new ppm_pixel[heightVar*widthVar];
+ppm_image ppm_image::swirl(){
+   ppm_image img(widthVar, heightVar);
    for (int i = 0; i < heightVar*widthVar; i++){ 
-      newPixel[i].r = (int)pixel[i].r;
-      newPixel[i].g = (int)pixel[i].g;
-      newPixel[i].b = (int)pixel[i].b;
-
-      pixel[i].r = 255-newPixel[i].g;
-      pixel[i].g = 255-newPixel[i].b;
-      pixel[i].b = 255-newPixel[i].r;
+      img.pixel[i].r = (int)pixel[i].g;
+      img.pixel[i].g = (int)pixel[i].b;
+      img.pixel[i].b = (int)pixel[i].r;
    }
-   delete[] newPixel;
+   return img;
 }
 //Add a border around the edge of your images.
 void ppm_image::border(ppm_pixel bord){
@@ -352,48 +301,71 @@ void ppm_image::border(ppm_pixel bord){
 
 
 //Difference: given a ppm_image, implement this.pixel - other.pixel
-void ppm_image::difference(ppm_image img){
-   //make sure it is does not go below 0
-   ppm_pixel* newPixel = new ppm_pixel[heightVar*widthVar];
+ppm_image ppm_image::difference(ppm_image img){
+   ppm_image result(widthVar, heightVar);
    for (int i = 0; i < heightVar*widthVar; i++){ 
-      newPixel[i].r = std::max((int)img.pixel[i].r - (int)pixel[i].r, 0);
-      newPixel[i].g = std::max((int)img.pixel[i].g - (int)pixel[i].g, 0);
-      newPixel[i].b = std::max((int)img.pixel[i].b - (int)pixel[i].b, 0);
-
-      pixel[i].r = newPixel[i].g;
-      pixel[i].g = newPixel[i].b;
-      pixel[i].b = newPixel[i].r;
+      result.pixel[i].r = std::max((int)img.pixel[i].r - (int)pixel[i].r, 0);
+      result.pixel[i].g = std::max((int)img.pixel[i].g - (int)pixel[i].g, 0);
+      result.pixel[i].b = std::max((int)img.pixel[i].b - (int)pixel[i].b, 0);
    }
-   delete[] newPixel;
+   return result;
 }
 
 //Sum: given a ppm_image, implement this.pixel + other.pixel
-void ppm_image::sum(ppm_image img){
-   //make sure it does not go above 255
-   ppm_pixel* newPixel = new ppm_pixel[heightVar*widthVar];
+ppm_image ppm_image::sum(ppm_image img){
+   ppm_image result(widthVar, heightVar);
    for (int i = 0; i < heightVar*widthVar; i++){ 
-      newPixel[i].r = std::min((int)img.pixel[i].r + (int)pixel[i].r, 255);
-      newPixel[i].g = std::min((int)img.pixel[i].g + (int)pixel[i].g, 255);
-      newPixel[i].b = std::min((int)img.pixel[i].b + (int)pixel[i].b, 255);
-
-      pixel[i].r = newPixel[i].g;
-      pixel[i].g = newPixel[i].b;
-      pixel[i].b = newPixel[i].r;
+      result.pixel[i].r = std::min((int)img.pixel[i].r + (int)pixel[i].r, 255);
+      result.pixel[i].g = std::min((int)img.pixel[i].g + (int)pixel[i].g, 255);
+      result.pixel[i].b = std::min((int)img.pixel[i].b + (int)pixel[i].b, 255);
    }
-   delete[] newPixel;
+   return result;
 }
 
 //Lightest
-void ppm_image::lightest(ppm_image img){
-   ppm_pixel* newPixel = new ppm_pixel[heightVar*widthVar];
+ppm_image ppm_image::lightest(ppm_image img){
+   ppm_image result(widthVar, heightVar);
    for (int i = 0; i < heightVar*widthVar; i++){ 
-      newPixel[i].r = std::max((int)img.pixel[i].r, (int)pixel[i].r);
-      newPixel[i].g = std::max((int)img.pixel[i].g, (int)pixel[i].g);
-      newPixel[i].b = std::max((int)img.pixel[i].b, (int)pixel[i].b);
-
-      pixel[i].r = newPixel[i].g;
-      pixel[i].g = newPixel[i].b;
-      pixel[i].b = newPixel[i].r;
+      result.pixel[i].r = std::max((int)img.pixel[i].r, (int)pixel[i].r);
+      result.pixel[i].g = std::max((int)img.pixel[i].g, (int)pixel[i].g);
+      result.pixel[i].b = std::max((int)img.pixel[i].b, (int)pixel[i].b);
    }
-   delete[] newPixel;
+   return result;
+}
+
+ppm_image ppm_image::collageVertical(ppm_image img){
+   int newSize = widthVar* (heightVar + img.heightVar);
+    ppm_image result(widthVar, heightVar + img.heightVar);
+   for (int i = 0; i < heightVar*widthVar; i++){ 
+      result.pixel[i].r = (int)pixel[i].r;
+      result.pixel[i].g = (int)pixel[i].g;
+      result.pixel[i].b = (int)pixel[i].b;
+   }
+   int j = 0;
+   for (int i = (heightVar * widthVar); i < newSize; i++){
+      result.pixel[i].r = (int)img.pixel[j].r;
+      result.pixel[i].g = (int)img.pixel[j].g;
+      result.pixel[i].b = (int)img.pixel[j].b;
+      j++;
+   }
+   return result;
+}
+ppm_image ppm_image::collageHorizontal(ppm_image img){
+   
+   int newSize = (widthVar + img.widthVar)*heightVar;
+    ppm_image result(widthVar + img.widthVar, heightVar);
+   for (int i = 0; i < heightVar*widthVar; i++){ 
+      result.pixel[i].r = (int)pixel[i].r;
+      result.pixel[i].g = (int)pixel[i].g;
+      result.pixel[i].b = (int)pixel[i].b;
+      
+   }
+   int j = 0;
+   for (int i = (heightVar * widthVar); i < newSize; i++){
+      result.pixel[i].r = (int)img.pixel[j].r;
+      result.pixel[i].g = (int)img.pixel[j].g;
+      result.pixel[i].b = (int)img.pixel[j].b;
+      j++;
+   }
+   return result;
 }

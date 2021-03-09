@@ -75,16 +75,21 @@ namespace agl
       // return the height of the image
       int height() const;
 
-      void invert();
+      ppm_image invert();
 
-      void swirl();
+      ppm_image swirl();
 
-      void difference(ppm_image img);
+      ppm_image difference(ppm_image img);
 
-      void sum(ppm_image img);
+      ppm_image sum(ppm_image img);
       
       void border(ppm_pixel bord);
 
-      void lightest(ppm_image img);
+      ppm_image lightest(ppm_image img);
+
+      ppm_image collageVertical(ppm_image img);
+
+      ppm_image collageHorizontal(ppm_image img);
+
    };
 }

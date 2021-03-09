@@ -17,8 +17,8 @@ int main(int argc, char** argv)
    copy.save("feep-test-copy.ppm"); // should match original and load into gimp
    
    // test: assignment operator
-   //copy = image; 
-   //image.save("feep-test-assignment.ppm"); // should match original and load into gimp
+   copy = image; 
+   image.save("feep-test-assignment.ppm"); // should match original and load into gimp
 
    // should print r,g,b
    ppm_pixel pixel = image.get(1, 1);
@@ -27,7 +27,6 @@ int main(int argc, char** argv)
    pixel.r = 255;
    image.set(1, 1, pixel);
    image.save("feep-test-newcolor.ppm");
-/*
    // test a non-trivial image
    image.load("../images/earth-ascii.ppm"); // a real image
 
@@ -61,14 +60,51 @@ int main(int argc, char** argv)
    // alpha blend
    ppm_image soup;
    soup.load("../images/soup-ascii.ppm");
-
-   int y = (int) (0.5f * (image.width() - soup.width()));
-   int x = (int) (0.5f * (image.height() - soup.height()));
-   ppm_image background = image.subimage(x, y, soup.width(), soup.height());
+   //soup.save("soup.ppm");
+   int x = (int) (0.5f * (image.width() - soup.width()));
+   int y = (int) (0.5f * (image.height() - soup.height()));
+   //cout << image.width() << " " << image.height();
+   //cout << soup.width() << " " << soup.height();
+   image.save("new.ppm");
+   //139 108 121 183
+   ppm_image background = image.subimage(y,x,soup.width(), soup.height());
    background.save("background-test.ppm");
    ppm_image blend = background.alpha_blend(soup, 0.5f);
+   //blend.save("blenddd.ppm");
    image.replace(blend, x, y);
    image.save("earth-blend-0.5.ppm");
-*/
+
+   ppm_image rey;
+   rey.load("../images/earth-ascii.ppm");
+
+   ppm_image kylo;
+   kylo.load("../images/soup-ascii.ppm");
+   
+   ppm_image invertedRey = rey.invert();
+   invertedRey.save("invert.ppm");
+
+   ppm_image swirledRey = rey.swirl();
+   swirledRey.save("swirl.ppm");
+
+   rey.load("../images/earth-ascii.ppm");
+   kylo.load("../images/soup-ascii.ppm");
+   ppm_image differenceReyKylo = rey.difference(kylo);
+   differenceReyKylo.save("difference.ppm");
+
+   ppm_image sumReyKylo = rey.sum(kylo);
+   sumReyKylo.save("sum.ppm");
+
+   ppm_pixel border;
+   border.r = 0;
+   border.g = 255;
+   border.b = 0;
+   kylo.border(border);
+   kylo.save("border.ppm");
+   rey.load("../images/earth-ascii.ppm");
+   kylo.load("../images/soup-ascii.ppm");
+   ppm_image lightestKyloRey = kylo.lightest(rey);
+   lightestKyloRey.save("lightest.ppm");
+
+
 }
 
