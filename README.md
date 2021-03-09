@@ -84,6 +84,7 @@ collageVertical(ppm_image img)
 ![collageWithASwirl](https://user-images.githubusercontent.com/55757317/110421437-84097380-806b-11eb-8fdd-e5e3719e126e.jpg)
 
 collageHorizontal(ppm_image img)
+
 ![sum](https://user-images.githubusercontent.com/55757317/110421971-7c969a00-806c-11eb-92b9-6a37c028dda8.jpg)
 
 sum(ppm_image img)
