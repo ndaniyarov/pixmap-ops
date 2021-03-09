@@ -93,6 +93,7 @@ sum(ppm_image img)
 
 attempts:
 difference(ppm_image img)
+
 ![lightest](https://user-images.githubusercontent.com/55757317/110422176-d4350580-806c-11eb-8f4b-379fd824a029.jpg)
 
 lightest(ppm_image)
