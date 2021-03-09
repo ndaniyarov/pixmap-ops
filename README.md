@@ -47,10 +47,13 @@ pixmap-ops/build $ ../bin/pixmap_art
 ## Image operators
 resize(int w, int h)
 ![earth-200-300](https://user-images.githubusercontent.com/55757317/110421454-8cfa4500-806b-11eb-957f-bef2d802d800.jpg)
+
 flip_horizontal()
 ![earth-flip](https://user-images.githubusercontent.com/55757317/110421470-95528000-806b-11eb-8493-0d057d42a4fa.jpg)
+
 subimage(int startx, int starty, int w, int h)
 ![earth-subimage](https://user-images.githubusercontent.com/55757317/110421585-cb8fff80-806b-11eb-9b7b-ca13d90c364f.jpg)
+
 replace(const ppm_image& image, int startx, int starty)
 alpha_blend(const ppm_image& other, float alpha)
 gammaCorrect(float gamma)
